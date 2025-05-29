@@ -8,6 +8,10 @@
   --income: #33CC95;
   --outcome: #E52E4D;
   --title: #363F5F;
+  --table: #969CB2;
+  --input-border: #D7D7D7;
+  --transaction-border: #D7D7D7;
+  --modal: #F0F2F5;
 }
 
 @theme inline {
@@ -18,6 +22,10 @@
   --color-income: var(--income);
   --color-outcome: var(--outcome);
   --color-title: var(--title);
+  --color-table: var(--table);
+  --color-input-border: var(--input-border);
+  --color-transaction-border: var(--transaction-border);
+  --color-modal: var(--modal);
 }
 
 @media (prefers-color-scheme: inline) {
