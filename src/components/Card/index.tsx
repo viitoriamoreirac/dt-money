@@ -1,3 +1,4 @@
+import { formatCurrency } from "@/utils";
 import Image from "next/image";
 
 export interface ICardProps {
@@ -25,7 +26,7 @@ export function Card({ title, type, value }:ICardProps){
         <span className={`text-[16px] ${cardTextColor}`}>{title}</span> 
         <Image src={cardIcon} width={32} height={32} alt="Card Icon" />
        </div>
-       <span className={`px-8 pt-4 text-4xl ${cardTextColor}`}>R$ {value}</span>
+       <span className={`px-8 pt-4 text-4xl ${cardTextColor}`}>{formatCurrency(value)}</span>
     </div>
   )
 }
