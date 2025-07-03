@@ -3,7 +3,6 @@ import { BodyContainer } from "@/components/BodyContainer";
 import { CardContainer } from "@/components/CardContainer";
 import { FormModal } from "@/components/FormModal";
 import { Header } from "@/components/Header";
-import { Spinner } from "@/components/Spinner";
 import { Table } from "@/components/Table";
 import { useTransaction } from "@/hooks/transactions";
 import { ITotal, ITransaction } from "@/types/transaction";
@@ -11,60 +10,45 @@ import { useMemo, useState } from "react";
 import { ToastContainer } from "react-toastify";
 
 export default function Home() {
-  //const [transactions, setTransactions] = useState<ITransaction[]>([])
-  const { data: transactions, isLoading } = useTransaction.ListAll();
-  const { mutate: createTransaction } = useTransaction.Create();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  /*const [totals, setTotals] = useState<ITotal>({
-    income: 0,
-    outcome: 0,
-    total:0
-  })*/
+  const { data: transactions , isLoading } = useTransaction.ListAll();
+  const { mutateAsync: addTransaction } = useTransaction.Create();
+  const openModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  }
-
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  }
-
-  const handleAddTransaction = async (transaction: ITransaction) => {
-    await createTransaction(transaction);
+  const handleAddModal = (newTransaction: ITransaction) => {
+    addTransaction(newTransaction);
   }
 
   const totalTransactions: ITotal = useMemo(() => {
-    if (transactions?.length === 0 || !transactions) {
-      return { total: 0, income: 0, outcome: 0 };
+    if (!transactions || transactions.length === 0) {
+      return { totalIncome: 0, totalOutcome: 0, total: 0 };
     }
-
-    return transactions?.reduce((acc: ITotal, {price, type}: ITransaction) => {
-      if (type === "INCOME") {
-        acc.income += price;
-        acc.total += price;
-      } else if (type==="OUTCOME") {
-        acc.outcome += price;
-        acc.total -= price;
-      }
-      return acc;
-    },{ total: 0, income: 0, outcome: 0 });
-
-  },[transactions])
-  //if (isLoading) return <Spinner />;
+  
+    return transactions.reduce(
+      (acc: ITotal, { type, price }: ITransaction) => {
+        if (type === 'INCOME') {
+          acc.totalIncome += price;
+          acc.total += price;
+        } else if (type === 'OUTCOME') {
+          acc.totalOutcome += price;
+          acc.total -= price;
+        }
+        return acc;
+      },
+      { totalIncome: 0, totalOutcome: 0, total: 0 }
+    );
+  }, [transactions]);
+  if (isLoading) return <div>Loading...</div>;
   return (
     <div>
       <ToastContainer />
-      <Header newTransactionClick={handleOpenModal} />
+      <Header openModal={openModal} />
       <BodyContainer>
-        {<CardContainer totals={totalTransactions} />}
-        {!isLoading && <Table data={transactions} /> }       
-        {isLoading && <Spinner />}
+        <CardContainer totals={totalTransactions} />
+        <Table data={transactions} />
+        { isModalOpen && <FormModal closeModal={handleCloseModal} formTitle="Adicionar Transação" addTransaction={handleAddModal} /> }
       </BodyContainer>
-      { isModalOpen  && <FormModal 
-        formTitle="Cadastro de Transação" 
-        closeModal={handleCloseModal}
-        addTransaction={handleAddTransaction}
-      /> }
     </div>
   );
 }

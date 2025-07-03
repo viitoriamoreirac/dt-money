@@ -8,7 +8,7 @@ export interface ITransaction {
 }
 
 export type ITotal = {
-    income: number;
-    outcome: number;
+    totalIncome: number;
+    totalOutcome: number;
     total: number;
 }

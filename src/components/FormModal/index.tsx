@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 // Validação do formulário
 
-
 export interface IFormModalProps {
     formTitle: string;
     closeModal: () => void;
@@ -35,7 +34,7 @@ type ITransactionForm = InferType<typeof transactionSchema>
 
 const transactionFormDefaultValues: ITransactionForm = {
   title: '',
-  type: 'income',
+  type: 'INCOME',
   category: '',
   price: 0,
   data: new Date()
