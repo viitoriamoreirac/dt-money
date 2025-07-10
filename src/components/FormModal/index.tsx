@@ -4,14 +4,9 @@ import { TransactionSwitcher } from "../TransactionSwitcher";
 import { ITransaction } from "@/types/transaction";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect } from "react";
+
 // Validação do formulário
-
-export interface IFormModalProps {
-    formTitle: string;
-    closeModal: () => void;
-    addTransaction: (transaction: ITransaction) => void;
-}
-
 const transactionSchema = object({
   title: string()
     .required('O Título é obrigatório')
@@ -42,20 +37,49 @@ const transactionFormDefaultValues: ITransactionForm = {
 
 type TransactionType = 'INCOME' | 'OUTCOME';
 
+export interface IFormModalProps {
+    formTitle: string;
+    closeModal: () => void;
+    addTransaction: (transaction: ITransaction) => void;
+    updateTransaction?: (id: string, transaction: ITransaction) => void;
+    transactionToEdit?: ITransaction | null;
+    isLoading?: boolean;
+}
 
-export function FormModal({formTitle, closeModal, addTransaction}: IFormModalProps){
-    // Função para lidar com o envio do formulário
-
+export function FormModal({
+    formTitle, 
+    closeModal, 
+    addTransaction, 
+    updateTransaction,
+    transactionToEdit,
+    isLoading = false
+}: IFormModalProps){
     const {
       handleSubmit,
       setValue,
       watch,
       register,
+      reset,
       formState: { errors }
     } = useForm<ITransactionForm>({
       defaultValues: transactionFormDefaultValues,
       resolver: yupResolver(transactionSchema)
     })
+
+    // Preencher formulário quando estiver editando
+    useEffect(() => {
+      if (transactionToEdit) {
+        reset({
+          title: transactionToEdit.title,
+          type: transactionToEdit.type,
+          category: transactionToEdit.category,
+          price: transactionToEdit.price,
+          data: new Date(transactionToEdit.data)
+        });
+      } else {
+        reset(transactionFormDefaultValues);
+      }
+    }, [transactionToEdit, reset]);
 
     const handleSetType = (type: 'INCOME' | 'OUTCOME') => {
       setValue('type', type);
@@ -64,7 +88,11 @@ export function FormModal({formTitle, closeModal, addTransaction}: IFormModalPro
     const type = watch('type', 'INCOME');
 
     const onSubmit = (data: ITransactionForm) => {
-      addTransaction(data as ITransaction);
+      if (transactionToEdit && updateTransaction) {
+        updateTransaction(transactionToEdit.id!, data as ITransaction);
+      } else {
+        addTransaction(data as ITransaction);
+      }
       closeModal();
     }
     
@@ -81,7 +109,8 @@ export function FormModal({formTitle, closeModal, addTransaction}: IFormModalPro
           type="button" 
           className="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600" 
           onClick={closeModal}
-          aria-label="Fechar">
+          aria-label="Fechar"
+          disabled={isLoading}>
           <span className="text-2xl">&times;</span>
         </button>
         <div className="bg-modal px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
@@ -92,17 +121,23 @@ export function FormModal({formTitle, closeModal, addTransaction}: IFormModalPro
           </div>
         </div>
         <form className="flex flex-col gap-4 px-12 mt-4 mb-6" onSubmit={handleSubmit(onSubmit)}>            
-            <Input type="text" placeholder="Título" {...register("title")}/>
+            <Input type="text" placeholder="Título" {...register("title")} disabled={isLoading}/>
             {errors.title && <span className="text-red-500">{errors.title.message}</span>}            
-            <Input type="number" placeholder="Preço" {...register("price")}/>    
+            <Input type="number" placeholder="Preço" {...register("price")} disabled={isLoading}/>    
             {errors.price && <span className="text-red-500">{errors.price.message}</span>}
-            <TransactionSwitcher setType={handleSetType} type={type as TransactionType}/>
+            <TransactionSwitcher setType={handleSetType} type={type as TransactionType} disabled={isLoading}/>
             {errors.type && <span className="text-red-500">{errors.type.message}</span>}
-            <Input type="text" placeholder="Categoria" {...register("category")} />
+            <Input type="text" placeholder="Categoria" {...register("category")} disabled={isLoading} />
             {errors.category && <span className="text-red-500">{errors.category.message}</span>}
             
             <div className="bg-modal px-12 py-3 flex sm:flex-row-reverse w-full mb-11">          
-              <button type="submit" className="mt-3 w-full justify-center rounded-md bg-income text-white px-3 py-5 text-normal font-semibold shadow-sm hover:opacity-80 sm:mt-0">Confirmar</button>
+              <button 
+                type="submit" 
+                className="mt-3 w-full justify-center rounded-md bg-income text-white px-3 py-5 text-normal font-semibold shadow-sm hover:opacity-80 sm:mt-0 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Salvando...' : (transactionToEdit ? 'Atualizar' : 'Confirmar')}
+              </button>
             </div>
         </form>
         
